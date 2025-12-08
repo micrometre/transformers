@@ -28,7 +28,7 @@ A beginner-friendly demo showcasing [Transformers.js](https://huggingface.co/doc
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/micrometre/transformers
 cd transfromers
 
 # Install dependencies
