@@ -4,14 +4,29 @@ import { pipeline, env } from '@huggingface/transformers';
 env.allowLocalModels = false;
 
 // ============================================
-// TEXT SUMMARIZATION
+// MODEL CONFIGURATION
 // ============================================
-const SUMMARIZE_MODEL = 'Xenova/distilbart-cnn-6-6';
-const SUMMARIZE_TASK = 'summarization';
+const MODELS = {
+    summarize: { name: 'Xenova/distilbart-cnn-6-6', task: 'summarization' },
+    sentiment: { name: 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', task: 'sentiment-analysis' },
+    text2text: { name: 'Xenova/flan-t5-small', task: 'text2text-generation' },
+    fillmask: { name: 'Xenova/bert-base-uncased', task: 'fill-mask' },
+};
 
-// DOM elements for summarization
+// Store loaded pipelines
+let summarizer = null;
+let classifier = null;
+let generator = null;
+let filler = null;
+
+// ============================================
+// DOM ELEMENTS
+// ============================================
+
+// Summarization
 const summarizeInput = document.getElementById('summarizeInput');
 const summarizeBtn = document.getElementById('summarizeBtn');
+const loadSummarizeBtn = document.getElementById('loadSummarizeBtn');
 const summarizeStatus = document.getElementById('summarizeStatus');
 const summarizeResult = document.getElementById('summarizeResult');
 const summarizeProgressContainer = document.getElementById('summarizeProgressContainer');
@@ -20,15 +35,10 @@ const summarizeProgressInfo = document.getElementById('summarizeProgressInfo');
 const summarizeModelName = document.getElementById('summarizeModelName');
 const summarizeModelDetails = document.getElementById('summarizeModelDetails');
 
-// ============================================
-// SENTIMENT ANALYSIS
-// ============================================
-const SENTIMENT_MODEL = 'Xenova/distilbert-base-uncased-finetuned-sst-2-english';
-const SENTIMENT_TASK = 'sentiment-analysis';
-
-// DOM elements for sentiment
+// Sentiment
 const sentimentInput = document.getElementById('sentimentInput');
 const sentimentBtn = document.getElementById('sentimentBtn');
+const loadSentimentBtn = document.getElementById('loadSentimentBtn');
 const sentimentStatus = document.getElementById('sentimentStatus');
 const sentimentResult = document.getElementById('sentimentResult');
 const sentimentProgressContainer = document.getElementById('sentimentProgressContainer');
@@ -37,15 +47,10 @@ const sentimentProgressInfo = document.getElementById('sentimentProgressInfo');
 const sentimentModelName = document.getElementById('sentimentModelName');
 const sentimentModelDetails = document.getElementById('sentimentModelDetails');
 
-// ============================================
-// TEXT2TEXT GENERATION
-// ============================================
-const TEXT2TEXT_MODEL = 'Xenova/flan-t5-small';
-const TEXT2TEXT_TASK = 'text2text-generation';
-
-// DOM elements for text2text
+// Text2Text
 const text2textInput = document.getElementById('text2textInput');
 const text2textBtn = document.getElementById('text2textBtn');
+const loadText2textBtn = document.getElementById('loadText2textBtn');
 const text2textStatus = document.getElementById('text2textStatus');
 const text2textResult = document.getElementById('text2textResult');
 const text2textProgressContainer = document.getElementById('text2textProgressContainer');
@@ -54,15 +59,10 @@ const text2textProgressInfo = document.getElementById('text2textProgressInfo');
 const text2textModelName = document.getElementById('text2textModelName');
 const text2textModelDetails = document.getElementById('text2textModelDetails');
 
-// ============================================
-// FILL-MASK
-// ============================================
-const FILLMASK_MODEL = 'Xenova/bert-base-uncased';
-const FILLMASK_TASK = 'fill-mask';
-
-// DOM elements for fill-mask
+// Fill-Mask
 const fillmaskInput = document.getElementById('fillmaskInput');
 const fillmaskBtn = document.getElementById('fillmaskBtn');
+const loadFillmaskBtn = document.getElementById('loadFillmaskBtn');
 const fillmaskStatus = document.getElementById('fillmaskStatus');
 const fillmaskResult = document.getElementById('fillmaskResult');
 const fillmaskProgressContainer = document.getElementById('fillmaskProgressContainer');
@@ -70,6 +70,15 @@ const fillmaskProgressBar = document.getElementById('fillmaskProgressBar');
 const fillmaskProgressInfo = document.getElementById('fillmaskProgressInfo');
 const fillmaskModelName = document.getElementById('fillmaskModelName');
 const fillmaskModelDetails = document.getElementById('fillmaskModelDetails');
+
+// Quiz
+const quizBtns = document.querySelectorAll('.quiz-btn');
+const quizBtn = document.getElementById('quizBtn');
+const quizStatus = document.getElementById('quizStatus');
+const quizResult = document.getElementById('quizResult');
+const quizModelDetails = document.getElementById('quizModelDetails');
+
+let selectedQuestion = null;
 
 // ============================================
 // PROGRESS CALLBACK FACTORY
@@ -95,123 +104,127 @@ function createProgressCallback(statusEl, progressContainerEl, progressBarEl, pr
 }
 
 // ============================================
-// LOADING BANNER
+// INITIALIZE UI (No auto-loading)
 // ============================================
-const loadingBanner = document.getElementById('loadingBanner');
-const loadingProgress = document.getElementById('loadingProgress');
-let modelsLoaded = 0;
-const totalModels = 4;
+summarizeModelName.textContent = MODELS.summarize.name;
+summarizeModelDetails.innerHTML = `<span>📋 ${MODELS.summarize.task}</span><span>⚡ fp32</span><span>⏸️ Not loaded</span>`;
 
-function updateLoadingProgress() {
-    modelsLoaded++;
-    loadingProgress.textContent = `${modelsLoaded} / ${totalModels}`;
-    
-    if (modelsLoaded >= totalModels) {
-        // All models loaded - hide banner with fade
-        loadingBanner.style.transition = 'opacity 0.5s, transform 0.5s';
-        loadingBanner.style.opacity = '0';
-        loadingBanner.style.transform = 'translateY(-10px)';
-        setTimeout(() => {
-            loadingBanner.classList.add('hidden');
-        }, 500);
-    }
-}
+sentimentModelName.textContent = MODELS.sentiment.name;
+sentimentModelDetails.innerHTML = `<span>📋 ${MODELS.sentiment.task}</span><span>⚡ fp32</span><span>⏸️ Not loaded</span>`;
+
+text2textModelName.textContent = MODELS.text2text.name;
+text2textModelDetails.innerHTML = `<span>📋 ${MODELS.text2text.task}</span><span>⚡ fp32</span><span>⏸️ Not loaded</span>`;
+
+fillmaskModelName.textContent = MODELS.fillmask.name;
+fillmaskModelDetails.innerHTML = `<span>📋 ${MODELS.fillmask.task}</span><span>⚡ fp32</span><span>⏸️ Not loaded</span>`;
 
 // ============================================
-// LOAD MODELS
+// LOAD MODEL HANDLERS
 // ============================================
 
-// Display initial model info
-summarizeModelName.textContent = SUMMARIZE_MODEL;
-summarizeModelDetails.innerHTML = `<span>📋 ${SUMMARIZE_TASK}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
-summarizeStatus.textContent = '⏳ Loading model...';
+// Load Summarization Model
+loadSummarizeBtn.addEventListener('click', async () => {
+    loadSummarizeBtn.disabled = true;
+    loadSummarizeBtn.textContent = '⏳ Loading...';
+    summarizeStatus.textContent = '⏳ Loading model...';
+    summarizeModelDetails.innerHTML = `<span>📋 ${MODELS.summarize.task}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
 
-sentimentModelName.textContent = SENTIMENT_MODEL;
-sentimentModelDetails.innerHTML = `<span>📋 ${SENTIMENT_TASK}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
-sentimentStatus.textContent = '⏳ Loading model...';
+    summarizer = await pipeline(MODELS.summarize.task, MODELS.summarize.name, {
+        dtype: 'fp32',
+        progress_callback: createProgressCallback(
+            summarizeStatus, summarizeProgressContainer, summarizeProgressBar, summarizeProgressInfo
+        ),
+    });
 
-text2textModelName.textContent = TEXT2TEXT_MODEL;
-text2textModelDetails.innerHTML = `<span>📋 ${TEXT2TEXT_TASK}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
-text2textStatus.textContent = '⏳ Loading model...';
-
-fillmaskModelName.textContent = FILLMASK_MODEL;
-fillmaskModelDetails.innerHTML = `<span>📋 ${FILLMASK_TASK}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
-fillmaskStatus.textContent = '⏳ Loading model...';
-
-// Load summarization model (first, since it's at the top)
-const summarizer = await pipeline(SUMMARIZE_TASK, SUMMARIZE_MODEL, {
-    dtype: 'fp32',
-    progress_callback: createProgressCallback(
-        summarizeStatus, summarizeProgressContainer, summarizeProgressBar, summarizeProgressInfo
-    ),
+    summarizeProgressContainer.style.display = 'none';
+    summarizeProgressInfo.textContent = '';
+    summarizeStatus.textContent = '✅ Ready!';
+    summarizeModelDetails.innerHTML = `<span>📋 ${MODELS.summarize.task}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
+    loadSummarizeBtn.style.display = 'none';
+    summarizeBtn.disabled = false;
 });
-summarizeProgressContainer.style.display = 'none';
-summarizeProgressInfo.textContent = '';
-summarizeStatus.textContent = '✅ Ready!';
-summarizeModelDetails.innerHTML = `<span>📋 ${SUMMARIZE_TASK}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
-summarizeBtn.disabled = false;
-updateLoadingProgress();
 
-// Load sentiment model
-const classifier = await pipeline(SENTIMENT_TASK, SENTIMENT_MODEL, {
-    dtype: 'fp32',
-    progress_callback: createProgressCallback(
-        sentimentStatus, sentimentProgressContainer, sentimentProgressBar, sentimentProgressInfo
-    ),
-});
-sentimentProgressContainer.style.display = 'none';
-sentimentProgressInfo.textContent = '';
-sentimentStatus.textContent = '✅ Ready!';
-sentimentModelDetails.innerHTML = `<span>📋 ${SENTIMENT_TASK}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
-sentimentBtn.disabled = false;
-updateLoadingProgress();
+// Load Sentiment Model
+loadSentimentBtn.addEventListener('click', async () => {
+    loadSentimentBtn.disabled = true;
+    loadSentimentBtn.textContent = '⏳ Loading...';
+    sentimentStatus.textContent = '⏳ Loading model...';
+    sentimentModelDetails.innerHTML = `<span>📋 ${MODELS.sentiment.task}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
 
-// Load text2text model
-const generator = await pipeline(TEXT2TEXT_TASK, TEXT2TEXT_MODEL, {
-    dtype: 'fp32',
-    progress_callback: createProgressCallback(
-        text2textStatus, text2textProgressContainer, text2textProgressBar, text2textProgressInfo
-    ),
-});
-text2textProgressContainer.style.display = 'none';
-text2textProgressInfo.textContent = '';
-text2textStatus.textContent = '✅ Ready!';
-text2textModelDetails.innerHTML = `<span>📋 ${TEXT2TEXT_TASK}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
-text2textBtn.disabled = false;
-updateLoadingProgress();
+    classifier = await pipeline(MODELS.sentiment.task, MODELS.sentiment.name, {
+        dtype: 'fp32',
+        progress_callback: createProgressCallback(
+            sentimentStatus, sentimentProgressContainer, sentimentProgressBar, sentimentProgressInfo
+        ),
+    });
 
-// Load fill-mask model
-const filler = await pipeline(FILLMASK_TASK, FILLMASK_MODEL, {
-    dtype: 'fp32',
-    progress_callback: createProgressCallback(
-        fillmaskStatus, fillmaskProgressContainer, fillmaskProgressBar, fillmaskProgressInfo
-    ),
+    sentimentProgressContainer.style.display = 'none';
+    sentimentProgressInfo.textContent = '';
+    sentimentStatus.textContent = '✅ Ready!';
+    sentimentModelDetails.innerHTML = `<span>📋 ${MODELS.sentiment.task}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
+    loadSentimentBtn.style.display = 'none';
+    sentimentBtn.disabled = false;
 });
-fillmaskProgressContainer.style.display = 'none';
-fillmaskProgressInfo.textContent = '';
-fillmaskStatus.textContent = '✅ Ready!';
-fillmaskModelDetails.innerHTML = `<span>📋 ${FILLMASK_TASK}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
-fillmaskBtn.disabled = false;
-updateLoadingProgress();
+
+// Load Text2Text Model
+loadText2textBtn.addEventListener('click', async () => {
+    loadText2textBtn.disabled = true;
+    loadText2textBtn.textContent = '⏳ Loading...';
+    text2textStatus.textContent = '⏳ Loading model...';
+    text2textModelDetails.innerHTML = `<span>📋 ${MODELS.text2text.task}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
+
+    generator = await pipeline(MODELS.text2text.task, MODELS.text2text.name, {
+        dtype: 'fp32',
+        progress_callback: createProgressCallback(
+            text2textStatus, text2textProgressContainer, text2textProgressBar, text2textProgressInfo
+        ),
+    });
+
+    text2textProgressContainer.style.display = 'none';
+    text2textProgressInfo.textContent = '';
+    text2textStatus.textContent = '✅ Ready!';
+    text2textModelDetails.innerHTML = `<span>📋 ${MODELS.text2text.task}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
+    loadText2textBtn.style.display = 'none';
+    text2textBtn.disabled = false;
+
+    // Also enable quiz since it uses text2text model
+    quizModelDetails.innerHTML = `<span>🧠 Q&A</span><span>✅ Ready</span>`;
+    quizBtns.forEach(btn => btn.disabled = false);
+});
+
+// Load Fill-Mask Model
+loadFillmaskBtn.addEventListener('click', async () => {
+    loadFillmaskBtn.disabled = true;
+    loadFillmaskBtn.textContent = '⏳ Loading...';
+    fillmaskStatus.textContent = '⏳ Loading model...';
+    fillmaskModelDetails.innerHTML = `<span>📋 ${MODELS.fillmask.task}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
+
+    filler = await pipeline(MODELS.fillmask.task, MODELS.fillmask.name, {
+        dtype: 'fp32',
+        progress_callback: createProgressCallback(
+            fillmaskStatus, fillmaskProgressContainer, fillmaskProgressBar, fillmaskProgressInfo
+        ),
+    });
+
+    fillmaskProgressContainer.style.display = 'none';
+    fillmaskProgressInfo.textContent = '';
+    fillmaskStatus.textContent = '✅ Ready!';
+    fillmaskModelDetails.innerHTML = `<span>📋 ${MODELS.fillmask.task}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
+    loadFillmaskBtn.style.display = 'none';
+    fillmaskBtn.disabled = false;
+});
 
 // ============================================
 // UK HISTORY QUIZ
 // ============================================
-const quizBtns = document.querySelectorAll('.quiz-btn');
-const quizBtn = document.getElementById('quizBtn');
-const quizStatus = document.getElementById('quizStatus');
-const quizResult = document.getElementById('quizResult');
-const quizModelDetails = document.getElementById('quizModelDetails');
-
-let selectedQuestion = null;
-
-// Enable quiz once text2text model is loaded
-quizModelDetails.innerHTML = `<span>🧠 Q&A</span><span>✅ Ready</span>`;
-quizBtns.forEach(btn => btn.disabled = false);
 
 // Handle question selection
 quizBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+        if (!generator) {
+            quizResult.innerHTML = '<span style="color: #dc3545;">Please load the Text2Text model first!</span>';
+            return;
+        }
         quizBtns.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         selectedQuestion = btn.dataset.question;
@@ -221,13 +234,14 @@ quizBtns.forEach(btn => {
 });
 
 // ============================================
-// EVENT HANDLERS
+// ACTION HANDLERS
 // ============================================
 
 // Text Summarization
 summarizeBtn.addEventListener('click', async () => {
     const text = summarizeInput.value.trim();
     if (!text) return;
+    if (!summarizer) return;
 
     summarizeBtn.disabled = true;
     summarizeStatus.textContent = '📝 Summarizing...';
@@ -238,7 +252,6 @@ summarizeBtn.addEventListener('click', async () => {
     });
 
     summarizeResult.innerHTML = `<strong>${output[0].summary_text}</strong>`;
-
     summarizeStatus.textContent = '';
     summarizeBtn.disabled = false;
 });
@@ -247,6 +260,7 @@ summarizeBtn.addEventListener('click', async () => {
 sentimentBtn.addEventListener('click', async () => {
     const text = sentimentInput.value.trim();
     if (!text) return;
+    if (!classifier) return;
 
     sentimentBtn.disabled = true;
     sentimentStatus.textContent = '🔍 Analyzing...';
@@ -258,7 +272,6 @@ sentimentBtn.addEventListener('click', async () => {
         <strong class="${label.toLowerCase()}">${label}</strong><br>
         Confidence: ${(score * 100).toFixed(1)}%
     `;
-
     sentimentStatus.textContent = '';
     sentimentBtn.disabled = false;
 });
@@ -267,6 +280,7 @@ sentimentBtn.addEventListener('click', async () => {
 text2textBtn.addEventListener('click', async () => {
     const text = text2textInput.value.trim();
     if (!text) return;
+    if (!generator) return;
 
     text2textBtn.disabled = true;
     text2textStatus.textContent = '✨ Generating...';
@@ -276,7 +290,6 @@ text2textBtn.addEventListener('click', async () => {
     });
 
     text2textResult.innerHTML = `<strong>${output[0].generated_text}</strong>`;
-
     text2textStatus.textContent = '';
     text2textBtn.disabled = false;
 });
@@ -284,6 +297,10 @@ text2textBtn.addEventListener('click', async () => {
 // UK History Quiz
 quizBtn.addEventListener('click', async () => {
     if (!selectedQuestion) return;
+    if (!generator) {
+        quizResult.innerHTML = '<span style="color: #dc3545;">Please load the Text2Text model first!</span>';
+        return;
+    }
 
     quizBtn.disabled = true;
     quizBtns.forEach(btn => btn.disabled = true);
@@ -298,7 +315,6 @@ quizBtn.addEventListener('click', async () => {
         <strong>Q:</strong> ${selectedQuestion}<br><br>
         <strong>A:</strong> ${output[0].generated_text}
     `;
-
     quizStatus.textContent = '';
     quizBtn.disabled = false;
     quizBtns.forEach(btn => btn.disabled = false);
@@ -311,6 +327,7 @@ fillmaskBtn.addEventListener('click', async () => {
         fillmaskResult.innerHTML = '<span style="color: #dc3545;">Please include [MASK] in your text!</span>';
         return;
     }
+    if (!filler) return;
 
     fillmaskBtn.disabled = true;
     fillmaskStatus.textContent = '🔤 Filling in...';
@@ -323,7 +340,6 @@ fillmaskBtn.addEventListener('click', async () => {
     ).join('<br>');
 
     fillmaskResult.innerHTML = topResults;
-
     fillmaskStatus.textContent = '';
     fillmaskBtn.disabled = false;
 });

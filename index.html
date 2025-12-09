@@ -199,6 +199,16 @@
             border-color: #f093fb;
         }
 
+        .btn-load {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            margin-bottom: 10px;
+        }
+
+        .btn-load:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
         .progress-bar-summarize {
             background: linear-gradient(90deg, #f093fb, #f5576c);
         }
@@ -328,15 +338,13 @@
 <body>
     <h1>🤗 Transformers.js Playground</h1>
 
-    <!-- Loading Banner -->
-    <div class="loading-banner" id="loadingBanner">
-        <div class="loading-spinner"></div>
+    <!-- Info Banner -->
+    <div class="loading-banner" id="loadingBanner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div style="font-size: 24px;">💡</div>
         <div class="loading-text">
-            <strong>⏳ Loading AI Models...</strong>
-            <small>First visit? This may take 1-2 minutes to download ~1GB of models. They'll be cached for instant
-                loading next time!</small>
+            <strong>Load Models On-Demand</strong>
+            <small>Click "Load Model" on any card to download it. Models are cached in your browser for instant loading next time!</small>
         </div>
-        <div class="loading-progress" id="loadingProgress">0 / 4</div>
     </div>
 
     <!-- Hero/Info Section -->
@@ -386,6 +394,7 @@
                 <div class="model-name" id="summarizeModelName">Loading...</div>
                 <div class="model-details" id="summarizeModelDetails"></div>
             </div>
+            <button id="loadSummarizeBtn" class="btn-load">📥 Load Model (~300MB)</button>
             <textarea id="summarizeInput" style="height: 100px;" placeholder="Paste a long text to summarize...">The tallest structure in Paris. the Eiffel Tower surpassed the Washington Monument to become the tallest man-made structure in the world, 
             </textarea>
             <button id="summarizeBtn" class="btn-summarize" disabled>Summarize Text</button>
@@ -404,6 +413,7 @@
                 <div class="model-name" id="sentimentModelName">Loading...</div>
                 <div class="model-details" id="sentimentModelDetails"></div>
             </div>
+            <button id="loadSentimentBtn" class="btn-load">📥 Load Model (~67MB)</button>
             <textarea id="sentimentInput" placeholder="Enter text to analyze...">I love learning about AI!</textarea>
             <button id="sentimentBtn" class="btn-sentiment" disabled>Analyze Sentiment</button>
             <div id="sentimentStatus" class="status"></div>
@@ -421,6 +431,7 @@
                 <div class="model-name" id="text2textModelName">Loading...</div>
                 <div class="model-details" id="text2textModelDetails"></div>
             </div>
+            <button id="loadText2textBtn" class="btn-load">📥 Load Model (~330MB)</button>
             <textarea id="text2textInput"
                 placeholder="Enter a prompt...">Translate to French: Hello, how are you?</textarea>
             <button id="text2textBtn" class="btn-text2text" disabled>Generate Text</button>
@@ -439,6 +450,7 @@
                 <div class="model-name" id="fillmaskModelName">Loading...</div>
                 <div class="model-details" id="fillmaskModelDetails"></div>
             </div>
+            <button id="loadFillmaskBtn" class="btn-load">📥 Load Model (~440MB)</button>
             <p style="color: #666; margin-bottom: 10px; font-size: 13px;">Use <code
                     style="background: #e9ecef; padding: 2px 6px; border-radius: 4px;">[MASK]</code> where you want the
                 AI to fill in:</p>
