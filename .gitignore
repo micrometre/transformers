@@ -31,3 +31,4 @@ Thumbs.db
 
 # Hugging Face model cache (downloaded models)
 .transformers_cache/
+.vercel
