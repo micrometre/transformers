@@ -121,7 +121,6 @@ const classifier = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-
 
 - 😀 Emotion Detection - Detect emotions (joy, sadness, anger, fear, surprise)
 - 🌍 Language Detection - Detect what language text is written in
-- 📝 Text Summarization - Summarize long text into a short summary
 
 
 ## 🤝 Contributing
