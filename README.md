@@ -1,8 +1,13 @@
-# 🤗 Transformers.js Demo
+# 🤗 Transformers.js Playground
 
 A beginner-friendly demo showcasing [Transformers.js](https://huggingface.co/docs/transformers.js) - run machine learning models directly in your browser!
 
-![Demo](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite) ![License](https://img.shields.io/badge/License-MIT-green)
+[![Deploy with Vercel](https://img.shields.io/badge/Vercel-Demo-black?logo=vercel)](https://transformers-micrometre.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-micrometre-181717?logo=github)](https://github.com/micrometre/transformers)
+![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+**🔗 [Live Demo](https://transformers-micrometre.vercel.app)** | **📂 [GitHub Repo](https://github.com/micrometre/transformers)**
 
 ## ✨ Features
 
@@ -47,10 +52,28 @@ npm run build
 npm run preview
 ```
 
+### Deploy to Vercel
+
+The easiest way to deploy this app:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/micrometre/transformers)
+
+Or manually:
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+That's it! Vercel auto-detects Vite and configures everything.
+
 ## 📁 Project Structure
 
 ```
-transfromers/
+transformers/
 ├── index.html      # Main HTML with UI
 ├── main.js         # App logic with Transformers.js
 ├── package.json    # Dependencies and scripts
@@ -93,6 +116,13 @@ const classifier = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-
     }
 });
 ```
+
+## To dos
+
+- 😀 Emotion Detection - Detect emotions (joy, sadness, anger, fear, surprise)
+- 🌍 Language Detection - Detect what language text is written in
+- 📝 Text Summarization - Summarize long text into a short summary
+
 
 ## 🤝 Contributing
 
