@@ -9,6 +9,7 @@ env.allowLocalModels = false;
 const MODELS = {
     summarize: { name: 'Xenova/distilbart-cnn-6-6', task: 'summarization' },
     sentiment: { name: 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', task: 'sentiment-analysis' },
+    emotion: { name: 'Xenova/bert-base-multilingual-uncased-sentiment', task: 'text-classification' },
     text2text: { name: 'Xenova/flan-t5-small', task: 'text2text-generation' },
     fillmask: { name: 'Xenova/bert-base-uncased', task: 'fill-mask' },
 };
@@ -16,6 +17,7 @@ const MODELS = {
 // Store loaded pipelines
 let summarizer = null;
 let classifier = null;
+let emotionClassifier = null;
 let generator = null;
 let filler = null;
 
@@ -46,6 +48,18 @@ const sentimentProgressBar = document.getElementById('sentimentProgressBar');
 const sentimentProgressInfo = document.getElementById('sentimentProgressInfo');
 const sentimentModelName = document.getElementById('sentimentModelName');
 const sentimentModelDetails = document.getElementById('sentimentModelDetails');
+
+// Emotion
+const emotionInput = document.getElementById('emotionInput');
+const emotionBtn = document.getElementById('emotionBtn');
+const loadEmotionBtn = document.getElementById('loadEmotionBtn');
+const emotionStatus = document.getElementById('emotionStatus');
+const emotionResult = document.getElementById('emotionResult');
+const emotionProgressContainer = document.getElementById('emotionProgressContainer');
+const emotionProgressBar = document.getElementById('emotionProgressBar');
+const emotionProgressInfo = document.getElementById('emotionProgressInfo');
+const emotionModelName = document.getElementById('emotionModelName');
+const emotionModelDetails = document.getElementById('emotionModelDetails');
 
 // Text2Text
 const text2textInput = document.getElementById('text2textInput');
@@ -112,6 +126,9 @@ summarizeModelDetails.innerHTML = `<span>📋 ${MODELS.summarize.task}</span><sp
 sentimentModelName.textContent = MODELS.sentiment.name;
 sentimentModelDetails.innerHTML = `<span>📋 ${MODELS.sentiment.task}</span><span>⚡ fp32</span><span>⏸️ Not loaded</span>`;
 
+emotionModelName.textContent = MODELS.emotion.name;
+emotionModelDetails.innerHTML = `<span>📋 ${MODELS.emotion.task}</span><span>⚡ fp32</span><span>⏸️ Not loaded</span>`;
+
 text2textModelName.textContent = MODELS.text2text.name;
 text2textModelDetails.innerHTML = `<span>📋 ${MODELS.text2text.task}</span><span>⚡ fp32</span><span>⏸️ Not loaded</span>`;
 
@@ -164,6 +181,28 @@ loadSentimentBtn.addEventListener('click', async () => {
     sentimentModelDetails.innerHTML = `<span>📋 ${MODELS.sentiment.task}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
     loadSentimentBtn.style.display = 'none';
     sentimentBtn.disabled = false;
+});
+
+// Load Emotion Model
+loadEmotionBtn.addEventListener('click', async () => {
+    loadEmotionBtn.disabled = true;
+    loadEmotionBtn.textContent = '⏳ Loading...';
+    emotionStatus.textContent = '⏳ Loading model...';
+    emotionModelDetails.innerHTML = `<span>📋 ${MODELS.emotion.task}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
+
+    emotionClassifier = await pipeline(MODELS.emotion.task, MODELS.emotion.name, {
+        dtype: 'fp32',
+        progress_callback: createProgressCallback(
+            emotionStatus, emotionProgressContainer, emotionProgressBar, emotionProgressInfo
+        ),
+    });
+
+    emotionProgressContainer.style.display = 'none';
+    emotionProgressInfo.textContent = '';
+    emotionStatus.textContent = '✅ Ready!';
+    emotionModelDetails.innerHTML = `<span>📋 ${MODELS.emotion.task}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
+    loadEmotionBtn.style.display = 'none';
+    emotionBtn.disabled = false;
 });
 
 // Load Text2Text Model
@@ -276,6 +315,31 @@ sentimentBtn.addEventListener('click', async () => {
     sentimentBtn.disabled = false;
 });
 
+// Emotion Detection (Sentiment Rating)
+emotionBtn.addEventListener('click', async () => {
+    const text = emotionInput.value.trim();
+    if (!text) return;
+    if (!emotionClassifier) return;
+
+    emotionBtn.disabled = true;
+    emotionStatus.textContent = '🔍 Analyzing...';
+
+    const output = await emotionClassifier(text);
+    const { label, score } = output[0];
+
+    // Convert label to star display (label format: "1 star", "2 stars", etc.)
+    const starCount = parseInt(label.split(' ')[0]);
+    const stars = '⭐'.repeat(starCount);
+
+    emotionResult.innerHTML = `
+        <strong style="font-size: 1.2em;">${stars}</strong><br>
+        <span style="font-size: 0.9em;">${label}</span><br>
+        Confidence: ${(score * 100).toFixed(1)}%
+    `;
+    emotionStatus.textContent = '';
+    emotionBtn.disabled = false;
+});
+
 // Text2Text Generation
 text2textBtn.addEventListener('click', async () => {
     const text = text2textInput.value.trim();
@@ -333,9 +397,9 @@ fillmaskBtn.addEventListener('click', async () => {
     fillmaskStatus.textContent = '🔤 Filling in...';
 
     const output = await filler(text);
-    
+
     // Show top 3 predictions
-    const topResults = output.slice(0, 3).map((item, i) => 
+    const topResults = output.slice(0, 3).map((item, i) =>
         `${i + 1}. <strong>${item.token_str}</strong> <span style="color: #666;">(${(item.score * 100).toFixed(1)}%)</span>`
     ).join('<br>');
 

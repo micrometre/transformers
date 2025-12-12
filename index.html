@@ -113,6 +113,10 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
 
+        .btn-emotion {
+            background: linear-gradient(135deg, #FFC371 0%, #FF5F6D 100%);
+        }
+
         .result {
             margin-top: 20px;
             padding: 20px;
@@ -159,6 +163,10 @@
             background: linear-gradient(90deg, #667eea, #764ba2);
         }
 
+        .progress-bar-emotion {
+            background: linear-gradient(90deg, #FFC371, #FF5F6D);
+        }
+
         .progress-bar-text2text {
             background: linear-gradient(90deg, #11998e, #38ef7d);
         }
@@ -197,6 +205,10 @@
 
         .model-info-summarize {
             border-color: #f093fb;
+        }
+
+        .model-info-emotion {
+            border-color: #FF5F6D;
         }
 
         .btn-load {
@@ -339,11 +351,13 @@
     <h1>🤗 Transformers.js Playground</h1>
 
     <!-- Info Banner -->
-    <div class="loading-banner" id="loadingBanner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="loading-banner" id="loadingBanner"
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <div style="font-size: 24px;">💡</div>
         <div class="loading-text">
             <strong>Load Models On-Demand</strong>
-            <small>Click "Load Model" on any card to download it. Models are cached in your browser for instant loading next time!</small>
+            <small>Click "Load Model" on any card to download it. Models are cached in your browser for instant loading
+                next time!</small>
         </div>
     </div>
 
@@ -422,6 +436,25 @@
             </div>
             <div class="progress-info" id="sentimentProgressInfo"></div>
             <div id="sentimentResult" class="result"></div>
+        </div>
+
+        <!-- Sentiment Rating Card -->
+        <div class="card">
+            <h2 class="card-title">⭐ Sentiment Rating</h2>
+            <div class="model-info model-info-emotion">
+                <div class="model-name" id="emotionModelName">Loading...</div>
+                <div class="model-details" id="emotionModelDetails"></div>
+            </div>
+            <button id="loadEmotionBtn" class="btn-load">📥 Load Model (~200MB)</button>
+            <textarea id="emotionInput"
+                placeholder="Enter text to rate...">This product exceeded my expectations!</textarea>
+            <button id="emotionBtn" class="btn-emotion" disabled>Rate Sentiment</button>
+            <div id="emotionStatus" class="status"></div>
+            <div class="progress-container" id="emotionProgressContainer">
+                <div class="progress-bar progress-bar-emotion" id="emotionProgressBar"></div>
+            </div>
+            <div class="progress-info" id="emotionProgressInfo"></div>
+            <div id="emotionResult" class="result"></div>
         </div>
 
         <!-- Text2Text Generation Card -->

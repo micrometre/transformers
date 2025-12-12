@@ -12,7 +12,11 @@ A beginner-friendly demo showcasing [Transformers.js](https://huggingface.co/doc
 ## ✨ Features
 
 - **😊 Sentiment Analysis** - Analyze text for positive/negative sentiment
+- **⭐ Sentiment Rating** - Rate text on a 1-5 star scale (multilingual)
+- **📝 Text Summarization** - Condense long articles into brief summaries
 - **✨ Text2Text Generation** - Translate text, answer questions, and more
+- **🔤 Fill in the Blank** - Predict missing words in sentences
+- **🇬🇧 UK History Quiz** - AI-powered question answering
 - **📊 Progress Tracking** - Visual progress bars during model download
 - **🚀 No Backend Required** - Everything runs in the browser!
 
@@ -20,8 +24,11 @@ A beginner-friendly demo showcasing [Transformers.js](https://huggingface.co/doc
 
 | Task | Model | Size |
 |------|-------|------|
+| Text Summarization | `Xenova/distilbart-cnn-6-6` | ~300MB |
 | Sentiment Analysis | `Xenova/distilbert-base-uncased-finetuned-sst-2-english` | ~67MB |
+| Sentiment Rating | `Xenova/bert-base-multilingual-uncased-sentiment` | ~200MB |
 | Text2Text Generation | `Xenova/flan-t5-small` | ~330MB |
+| Fill in the Blank | `Xenova/bert-base-uncased` | ~440MB |
 
 ## 🚀 Getting Started
 
@@ -107,6 +114,15 @@ const result = await generator('Translate to French: Hello!');
 // [{ generated_text: 'Bonjour!' }]
 ```
 
+### Sentiment Rating (Multilingual)
+```javascript
+import { pipeline } from '@huggingface/transformers';
+
+const rater = await pipeline('text-classification', 'Xenova/bert-base-multilingual-uncased-sentiment');
+const result = await rater('This product exceeded my expectations!');
+// [{ label: '5 stars', score: 0.85 }]
+```
+
 ### Specify Model Options
 ```javascript
 const classifier = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
@@ -119,8 +135,8 @@ const classifier = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-
 
 ## To dos
 
-- 😀 Emotion Detection - Detect emotions (joy, sadness, anger, fear, surprise)
 - 🌍 Language Detection - Detect what language text is written in
+- � Image Classification - Classify images into categories
 
 
 ## 🤝 Contributing
