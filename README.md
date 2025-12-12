@@ -17,6 +17,7 @@ A beginner-friendly demo showcasing [Transformers.js](https://huggingface.co/doc
 - **✨ Text2Text Generation** - Translate text, answer questions, and more
 - **🔤 Fill in the Blank** - Predict missing words in sentences
 - **🇬🇧 UK History Quiz** - AI-powered question answering
+- **🌍 Language Detection** - Detect what language text is written in
 - **📊 Progress Tracking** - Visual progress bars during model download
 - **🚀 No Backend Required** - Everything runs in the browser!
 
@@ -29,6 +30,7 @@ A beginner-friendly demo showcasing [Transformers.js](https://huggingface.co/doc
 | Sentiment Rating | `Xenova/bert-base-multilingual-uncased-sentiment` | ~200MB |
 | Text2Text Generation | `Xenova/flan-t5-small` | ~330MB |
 | Fill in the Blank | `Xenova/bert-base-uncased` | ~440MB |
+| Language Detection | `onnx-community/language_detection-ONNX` | ~450MB |
 
 ## 🚀 Getting Started
 
@@ -135,8 +137,7 @@ const classifier = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-
 
 ## To dos
 
-- 🌍 Language Detection - Detect what language text is written in
-- � Image Classification - Classify images into categories
+- 🖼️ Image Classification - Classify images into categories
 
 
 ## 🤝 Contributing

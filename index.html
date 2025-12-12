@@ -5,45 +5,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🤗 Transformers.js Playground</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #09090b;
+            --card-bg: rgba(39, 39, 42, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            max-width: 1100px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #f5f5f5;
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Background Glow */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
+            filter: blur(80px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -10%;
+            right: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent 70%);
+            filter: blur(80px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 30px;
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 50px;
         }
 
         .hero {
-            margin-bottom: 25px;
+            margin-bottom: 40px;
         }
 
         .card-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 24px;
         }
 
         @media (max-width: 768px) {
             .card-grid {
                 grid-template-columns: 1fr;
             }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
         }
 
+        /* Card Styling */
         .card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 28px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .card-full {
@@ -51,308 +134,301 @@
         }
 
         .card-title {
-            margin: 0 0 15px 0;
-            font-size: 20px;
+            margin: 0 0 20px 0;
+            font-size: 1.5rem;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: -0.02em;
         }
 
+        /* Inputs */
         textarea {
             width: 100%;
-            height: 70px;
-            padding: 10px;
-            font-size: 14px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            min-height: 100px;
+            padding: 16px;
+            font-size: 0.95rem;
+            font-family: var(--font-family);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             resize: vertical;
+            transition: all 0.2s ease;
+            outline: none;
         }
 
         textarea:focus {
-            outline: none;
-            border-color: #007bff;
+            border-color: #6366f1;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
         }
 
+        /* Buttons */
         button {
             width: 100%;
             padding: 14px;
-            font-size: 16px;
-            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 20px;
+            transition: all 0.2s ease;
+            letter-spacing: 0.01em;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
         }
 
-        button:hover {
-            opacity: 0.9;
+        button:active {
+            transform: scale(0.98);
         }
 
         button:disabled {
-            background: #ccc !important;
+            background: #3f3f46 !important;
+            color: #71717a;
             cursor: not-allowed;
+            opacity: 0.7;
+            transform: none !important;
+        }
+
+        /* Button Variants */
+        .btn-load {
+            background: #27272a;
+            border: 1px solid var(--border-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            padding: 10px;
+        }
+
+        .btn-load:hover {
+            background: #3f3f46;
+            border-color: #52525b;
+        }
+
+        /* Gradient Buttons */
+        .btn-semantic {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         }
 
         .btn-sentiment {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
         }
 
         .btn-text2text {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
 
         .btn-quiz {
-            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
         }
 
         .btn-fillmask {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
         }
 
         .btn-summarize {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         }
 
         .btn-emotion {
-            background: linear-gradient(135deg, #FFC371 0%, #FF5F6D 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         }
 
+        .btn-language {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+        }
+
+        button:hover:not(:disabled) {
+            opacity: 1;
+            filter: brightness(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Results */
         .result {
-            margin-top: 20px;
+            margin-top: 24px;
             padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 18px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
             min-height: 60px;
-        }
-
-        .positive {
-            color: #28a745;
-        }
-
-        .negative {
-            color: #dc3545;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-primary);
         }
 
         .status {
             text-align: center;
-            color: #666;
-            margin-top: 10px;
-            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 12px;
+            font-size: 0.85rem;
         }
 
+        /* Model Info */
+        .model-info {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .model-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .model-details {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .model-details span {
+            display: inline-flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-right: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Progress Bars */
         .progress-container {
             width: 100%;
-            height: 16px;
-            background: #e9ecef;
-            border-radius: 8px;
-            margin-top: 12px;
+            height: 6px;
+            background: #27272a;
+            border-radius: 100px;
+            margin-top: 16px;
             overflow: hidden;
             display: none;
         }
 
         .progress-bar {
             height: 100%;
-            border-radius: 8px;
+            border-radius: 100px;
             transition: width 0.3s ease;
             width: 0%;
         }
 
+        .progress-info {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            text-align: right;
+        }
+
+        /* Specific Progress Gradients */
         .progress-bar-sentiment {
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #8b5cf6, #6d28d9);
         }
 
         .progress-bar-emotion {
-            background: linear-gradient(90deg, #FFC371, #FF5F6D);
+            background: linear-gradient(90deg, #f59e0b, #d97706);
         }
 
         .progress-bar-text2text {
-            background: linear-gradient(90deg, #11998e, #38ef7d);
-        }
-
-        .progress-info {
-            font-size: 11px;
-            color: #888;
-            margin-top: 6px;
-            text-align: center;
-        }
-
-        .model-info {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 13px;
-            border-left: 4px solid;
-        }
-
-        .model-info-sentiment {
-            border-color: #764ba2;
-        }
-
-        .model-info-text2text {
-            border-color: #11998e;
-        }
-
-        .model-info-quiz {
-            border-color: #ee0979;
-        }
-
-        .model-info-fillmask {
-            border-color: #4facfe;
-        }
-
-        .model-info-summarize {
-            border-color: #f093fb;
-        }
-
-        .model-info-emotion {
-            border-color: #FF5F6D;
-        }
-
-        .btn-load {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-            margin-bottom: 10px;
-        }
-
-        .btn-load:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+            background: linear-gradient(90deg, #10b981, #059669);
         }
 
         .progress-bar-summarize {
-            background: linear-gradient(90deg, #f093fb, #f5576c);
+            background: linear-gradient(90deg, #ec4899, #db2777);
         }
 
         .progress-bar-fillmask {
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
-        }
-
-        .quiz-questions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .quiz-btn {
-            padding: 12px 15px;
-            background: #ffffff;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: left;
-            font-size: 15px;
-            color: #333;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .quiz-btn:hover {
-            border-color: #ee0979;
-            background: #fff5f7;
-            color: #222;
-        }
-
-        .quiz-btn.selected {
-            border-color: #ee0979;
-            background: linear-gradient(135deg, #fff5f7 0%, #fff0e6 100%);
-            color: #222;
-            font-weight: 600;
-        }
-
-        .quiz-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+            background: linear-gradient(90deg, #06b6d4, #0891b2);
         }
 
         .progress-bar-quiz {
-            background: linear-gradient(90deg, #ee0979, #ff6a00);
+            background: linear-gradient(90deg, #f43f5e, #e11d48);
         }
 
-        .model-name {
-            font-weight: bold;
-            font-size: 14px;
-            word-break: break-all;
-            color: #333;
+        .progress-bar-language {
+            background: linear-gradient(90deg, #0ea5e9, #2563eb);
         }
 
-        .model-details {
-            margin-top: 8px;
-            font-size: 12px;
-            color: #666;
-        }
 
-        .model-details span {
-            display: inline-block;
-            background: #e9ecef;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin: 2px 4px 2px 0;
-        }
-
-        .loading-banner {
-            background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
+        /* Quiz Buttons */
+        .quiz-questions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             margin-bottom: 20px;
+        }
+
+        .quiz-btn {
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            margin-top: 0;
+            font-family: var(--font-family);
+        }
+
+        .quiz-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .quiz-btn.selected {
+            background: rgba(244, 63, 94, 0.1);
+            border-color: #f43f5e;
+            color: #f43f5e;
+        }
+
+        /* Banner */
+        .loading-banner {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: #e0e7ff;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 32px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            gap: 20px;
+            backdrop-filter: blur(8px);
         }
 
         .loading-banner.hidden {
             display: none;
         }
 
-        .loading-spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        /* Helper Classes */
+        .positive {
+            color: #4ade80;
         }
 
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .loading-text {
-            flex: 1;
-        }
-
-        .loading-text strong {
-            display: block;
-            margin-bottom: 3px;
-        }
-
-        .loading-text small {
-            opacity: 0.9;
-            font-size: 12px;
-        }
-
-        .loading-progress {
-            font-weight: bold;
-            font-size: 14px;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 12px;
-            border-radius: 15px;
+        .negative {
+            color: #f87171;
         }
     </style>
 </head>
 
-<body>
+<div class="container">
     <h1>🤗 Transformers.js Playground</h1>
+    <p class="subtitle">Run powerful AI models directly in your browser. No server required.</p>
 
     <!-- Info Banner -->
-    <div class="loading-banner" id="loadingBanner"
-        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="loading-banner" id="loadingBanner">
         <div style="font-size: 24px;">💡</div>
         <div class="loading-text">
             <strong>Load Models On-Demand</strong>
@@ -363,38 +439,26 @@
 
     <!-- Hero/Info Section -->
     <div class="hero">
-        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-            <p style="margin: 0 0 15px 0; font-size: 18px; font-weight: 500;">
+        <div class="card card-full"
+            style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border: none;">
+            <p style="margin: 0 0 16px 0; font-size: 1.1rem; font-weight: 500; color: white;">
                 Run machine learning models directly in your browser — no backend required!
             </p>
-            <p style="margin: 0 0 15px 0; opacity: 0.9; font-size: 14px;">
+            <p style="margin: 0 0 20px 0; opacity: 0.9; font-size: 0.95rem; color: rgba(255,255,255,0.8);">
                 Powered by <a href="https://huggingface.co/docs/transformers.js" target="_blank"
-                    style="color: #fff; text-decoration: underline;">Transformers.js</a>
-                — the JavaScript version of Hugging Face Transformers.
+                    style="color: #fff; text-decoration: underline; font-weight: 600;">Transformers.js</a>
+                — the javascript machine learning library.
             </p>
-            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto;">
                 <span
-                    style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px;">✨
+                    style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; color: white;">✨
                     100% Client-Side</span>
                 <span
-                    style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px;">🔒
+                    style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; color: white;">🔒
                     Private & Secure</span>
                 <span
-                    style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px;">⚡
+                    style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; color: white;">⚡
                     WebGPU Ready</span>
-                <span
-                    style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px;">📦
-                    ~400MB Models</span>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <a href="https://github.com/micrometre/transformers" target="_blank"
-                    style="background: rgba(255,255,255,0.2); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px;">
-                    <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                    </svg>
-                    GitHub
-                </a>
             </div>
         </div>
     </div>
@@ -522,38 +586,58 @@
             <div id="quizStatus" class="status"></div>
             <div id="quizResult" class="result"></div>
         </div>
+        <!-- Language Detection Card -->
+        <div class="card">
+            <h2 class="card-title">🌍 Language Detection</h2>
+            <div class="model-info model-info-language" style="border-color: #0ea5e9;">
+                <div class="model-name" id="languageModelName">Loading...</div>
+                <div class="model-details" id="languageModelDetails"></div>
+            </div>
+            <button id="loadLanguageBtn" class="btn-load">📥 Load Model (~450MB)</button>
+            <textarea id="languageInput"
+                placeholder="Enter text to detect language...">Bonjour tout le monde!</textarea>
+            <button id="languageBtn" class="btn-language" disabled>Detect Language</button>
+            <div id="languageStatus" class="status"></div>
+            <div class="progress-container" id="languageProgressContainer">
+                <div class="progress-bar progress-bar-language" id="languageProgressBar"></div>
+            </div>
+            <div class="progress-info" id="languageProgressInfo"></div>
+            <div id="languageResult" class="result"></div>
+        </div>
     </div>
+</div> <!-- Close container -->
 
-    <!-- Footer -->
-    <footer style="text-align: center; padding: 20px; color: #666; font-size: 14px; margin-top: 10px;">
-        <p style="margin: 0 0 10px 0;">
-            <a href="https://github.com/micrometre/transformers" target="_blank"
-                style="color: #333; text-decoration: none; margin: 0 10px;">
-                <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;" viewBox="0 0 24 24"
-                    fill="currentColor">
-                    <path
-                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                </svg>
-                GitHub
-            </a>
-            <a href="https://huggingface.co/docs/transformers.js" target="_blank"
-                style="color: #333; text-decoration: none; margin: 0 10px;">
-                🤗 Docs
-            </a>
-            <a href="https://huggingface.co/Xenova" target="_blank"
-                style="color: #333; text-decoration: none; margin: 0 10px;">
-                📦 Models
-            </a>
-        </p>
-        <p style="margin: 0; font-size: 12px; color: #999;">
-            Built with ❤️ using <a href="https://vitejs.dev" target="_blank" style="color: #646cff;">Vite</a>
-            & <a href="https://huggingface.co/docs/transformers.js" target="_blank"
-                style="color: #ff9d00;">Transformers.js</a>
-            • <a href="https://github.com/micrometre" target="_blank" style="color: #999;">@micrometre</a>
-        </p>
-    </footer>
+<!-- Footer -->
+<footer
+    style="text-align: center; padding: 20px; color: #a1a1aa; font-size: 14px; margin-top: 40px; border-top: 1px solid var(--border-color);">
+    <p style="margin: 0 0 10px 0;">
+        <a href="https://github.com/micrometre/transformers" target="_blank"
+            style="color: #fafafa; text-decoration: none; margin: 0 10px;">
+            <svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 5px;" viewBox="0 0 24 24"
+                fill="currentColor">
+                <path
+                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+            </svg>
+            GitHub
+        </a>
+        <a href="https://huggingface.co/docs/transformers.js" target="_blank"
+            style="color: #fafafa; text-decoration: none; margin: 0 10px;">
+            🤗 Docs
+        </a>
+        <a href="https://huggingface.co/Xenova" target="_blank"
+            style="color: #fafafa; text-decoration: none; margin: 0 10px;">
+            📦 Models
+        </a>
+    </p>
+    <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
+        Built with ❤️ using <a href="https://vitejs.dev" target="_blank" style="color: #646cff;">Vite</a>
+        & <a href="https://huggingface.co/docs/transformers.js" target="_blank"
+            style="color: #fbbf24;">Transformers.js</a>
+        • <a href="https://github.com/micrometre" target="_blank" style="color: #a1a1aa;">@micrometre</a>
+    </p>
+</footer>
 
-    <script type="module" src="/main.js"></script>
+<script type="module" src="/main.js"></script>
 </body>
 
 </html>

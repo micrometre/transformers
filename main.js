@@ -12,6 +12,7 @@ const MODELS = {
     emotion: { name: 'Xenova/bert-base-multilingual-uncased-sentiment', task: 'text-classification' },
     text2text: { name: 'Xenova/flan-t5-small', task: 'text2text-generation' },
     fillmask: { name: 'Xenova/bert-base-uncased', task: 'fill-mask' },
+    language: { name: 'onnx-community/language_detection-ONNX', task: 'text-classification' },
 };
 
 // Store loaded pipelines
@@ -20,6 +21,7 @@ let classifier = null;
 let emotionClassifier = null;
 let generator = null;
 let filler = null;
+let languageClassifier = null;
 
 // ============================================
 // DOM ELEMENTS
@@ -85,6 +87,18 @@ const fillmaskProgressInfo = document.getElementById('fillmaskProgressInfo');
 const fillmaskModelName = document.getElementById('fillmaskModelName');
 const fillmaskModelDetails = document.getElementById('fillmaskModelDetails');
 
+// Language Detection
+const languageInput = document.getElementById('languageInput');
+const languageBtn = document.getElementById('languageBtn');
+const loadLanguageBtn = document.getElementById('loadLanguageBtn');
+const languageStatus = document.getElementById('languageStatus');
+const languageResult = document.getElementById('languageResult');
+const languageProgressContainer = document.getElementById('languageProgressContainer');
+const languageProgressBar = document.getElementById('languageProgressBar');
+const languageProgressInfo = document.getElementById('languageProgressInfo');
+const languageModelName = document.getElementById('languageModelName');
+const languageModelDetails = document.getElementById('languageModelDetails');
+
 // Quiz
 const quizBtns = document.querySelectorAll('.quiz-btn');
 const quizBtn = document.getElementById('quizBtn');
@@ -134,6 +148,9 @@ text2textModelDetails.innerHTML = `<span>📋 ${MODELS.text2text.task}</span><sp
 
 fillmaskModelName.textContent = MODELS.fillmask.name;
 fillmaskModelDetails.innerHTML = `<span>📋 ${MODELS.fillmask.task}</span><span>⚡ fp32</span><span>⏸️ Not loaded</span>`;
+
+languageModelName.textContent = MODELS.language.name;
+languageModelDetails.innerHTML = `<span>📋 ${MODELS.language.task}</span><span>⚡ fp32</span><span>⏸️ Not loaded</span>`;
 
 // ============================================
 // LOAD MODEL HANDLERS
@@ -251,6 +268,28 @@ loadFillmaskBtn.addEventListener('click', async () => {
     fillmaskModelDetails.innerHTML = `<span>📋 ${MODELS.fillmask.task}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
     loadFillmaskBtn.style.display = 'none';
     fillmaskBtn.disabled = false;
+});
+
+// Load Language Detection Model
+loadLanguageBtn.addEventListener('click', async () => {
+    loadLanguageBtn.disabled = true;
+    loadLanguageBtn.textContent = '⏳ Loading...';
+    languageStatus.textContent = '⏳ Loading model...';
+    languageModelDetails.innerHTML = `<span>📋 ${MODELS.language.task}</span><span>⚡ fp32</span><span>⏳ Loading...</span>`;
+
+    languageClassifier = await pipeline(MODELS.language.task, MODELS.language.name, {
+        dtype: 'fp32',
+        progress_callback: createProgressCallback(
+            languageStatus, languageProgressContainer, languageProgressBar, languageProgressInfo
+        ),
+    });
+
+    languageProgressContainer.style.display = 'none';
+    languageProgressInfo.textContent = '';
+    languageStatus.textContent = '✅ Ready!';
+    languageModelDetails.innerHTML = `<span>📋 ${MODELS.language.task}</span><span>⚡ fp32</span><span>✅ Ready</span>`;
+    loadLanguageBtn.style.display = 'none';
+    languageBtn.disabled = false;
 });
 
 // ============================================
@@ -406,4 +445,26 @@ fillmaskBtn.addEventListener('click', async () => {
     fillmaskResult.innerHTML = topResults;
     fillmaskStatus.textContent = '';
     fillmaskBtn.disabled = false;
+});
+
+// Language Detection
+languageBtn.addEventListener('click', async () => {
+    const text = languageInput.value.trim();
+    if (!text) return;
+    if (!languageClassifier) return;
+
+    languageBtn.disabled = true;
+    languageStatus.textContent = '🌍 Detecting...';
+
+    const output = await languageClassifier(text);
+    // output format: [{ label: 'fr', score: 0.99... }]
+    const { label, score } = output[0];
+
+    languageResult.innerHTML = `
+        <strong style="font-size: 1.2em;">${label.toUpperCase()}</strong><br>
+        <span style="font-size: 0.9em;">Detected Language</span><br>
+        Confidence: ${(score * 100).toFixed(1)}%
+    `;
+    languageStatus.textContent = '';
+    languageBtn.disabled = false;
 });
